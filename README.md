@@ -9,7 +9,7 @@ Mainly in
 
 Links and references :
 
-[How Deep Neural Networks Work - Brandon Rohrer](https://www.youtube.com/watch?v=ILsA4nyG7I0)
-[The Knapsack Problem & Genetic Algorithms - Computerphile](https://www.youtube.com/watch?v=MacVqujSXWE)
+- [How Deep Neural Networks Work - Brandon Rohrer](https://www.youtube.com/watch?v=ILsA4nyG7I0)
+- [The Knapsack Problem & Genetic Algorithms - Computerphile](https://www.youtube.com/watch?v=MacVqujSXWE)
 
 //Will add as research progresses
