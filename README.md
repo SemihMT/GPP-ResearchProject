@@ -1,7 +1,8 @@
 # GPP-ResearchProject - Rockets using the Genetic Algorithm
 
 This project breeds "smart" rockets to fly towards a target using an implementation of a genetic algorithm.
-// IMAGE HERE
+
+[](https://github.com/SemihMT/GPP-ResearchProject/blob/Final/WindowsTerminal_u76k7z5BVs.gif)
 
 The implementation is based on The Coding Train's [p5js version](https://editor.p5js.org/codingtrain/sketches/o5PwECj42)
 
