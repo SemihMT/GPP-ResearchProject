@@ -37,12 +37,12 @@ A solid understanding of the matingpool is very handy before going in depth abou
 The mating pool is simply a (large) container of "organisms" copied over from the population.
 This mating pool gets filled according to the fitness of each "organism" in the population, making sure that when we randomly pick an element from the mating pool, the chances of us picking any one of them directly correspond to their fitness.
 
-An example to make things clear: 
-Let's say we have 10 organisms, all with a fitness score ranging from 1 to 10.
-The first organism has a fitness of 1 --...--> the 10th organism has a fitness of 10.
+> An example to make things clear: 
+> Let's say we have 10 organisms, all with a fitness score ranging from 1 to 10.
+> The first organism has a fitness of 1 --...--> the 10th organism has a fitness of 10.
 
-To fill the matingpool correctly you'd make sure that there is only one copy of the organism with fitness 1, while there are 10 copies of the organism with fitness 10.
-This ensures that the organism with fitness 10 is 10 times more likely to be picked than the organism with fitness 1.
+> To fill the matingpool correctly you'd make sure that there is only one copy of the organism with fitness 1, while there are 10 copies of the organism with fitness 10.
+> This ensures that the organism with fitness 10 is 10 times more likely to be picked than the organism with fitness 1.
 
 ### The fitness function
 
