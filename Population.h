@@ -1,45 +1,26 @@
-#pragma once
-//One big array of N elements of DNA
+﻿#pragma once
+#include "pch.h"
 #include <vector>
-class DNA;
-class Population final
+#include <memory>
+#include "Rocket.h"
+struct Population
 {
-public:
-	explicit Population(const std::string& targetPhrase,const float mutationRate,const int populationSize);
-	~Population();
+	Population(int populationSize,int lifespan, float mutationRate, const Vector2f& target,const Rectf& obstacle, int& count);
+	float NaturalSelection();
+	int GetFinished();
+	void Selection();
+	void Update(float elapsedSec);
+	void Draw();
 
-	// Calculate the fitness for all elements in the population
-	void CalcFitness();
 
-	// Generate a mating pool
-	void NaturalSelection();
 
-	// Create a new generation
-	void Generate();
 
-	DNA* AcceptReject(const float maxFitness);
-
-	std::string GetBest();
-
-	// Find the current fittest member of the population
-	void Evaluate();
-
-	bool IsFinished() const;
-
-	int GetGenerations() const;
-
-	// Compute the average fitness over the whole population
-	float GetAverageFitness() const;
-
-	std::string AllPhrases() const;
-
-private:
-	std::vector<DNA*> m_Population;
-	//std::vector<DNA*> m_MatingPool;
-	int  m_Generations;
-	bool m_Finished;
-	std::string m_Target;
+	std::vector<std::shared_ptr<Rocket>> m_Rockets;
+	std::vector<std::shared_ptr<Rocket>> m_MatingPool;
+	int m_PopulationSize;
+	int& m_Count;
+	Vector2f m_Target;
+	int m_Lifespan;
 	float m_MutationRate;
-	float m_PerfectScore;
-	std::string m_Best;
+	Rectf m_Obstacle;
 };

@@ -1,161 +1,86 @@
-#include "pch.h"
-#include "Population.h"
-
-#include <algorithm>
-#include <set>
-
-#include "DNA.h"
-#include "utils.h"
-
-Population::Population(const std::string& targetPhrase, const float mutationRate, const int populationSize) :
-	m_Population{},
-	//m_MatingPool{},
-	m_Generations{ 0 },
-	m_Finished{ false },
-	m_Target{ targetPhrase },
+﻿#include "Population.h"
+Population::Population(int populationSize, int lifespan, float mutationRate, const Vector2f& target, const Rectf& obstacle, int& count) :
+	m_PopulationSize{ populationSize }, 
+	m_Lifespan{ lifespan },
 	m_MutationRate{ mutationRate },
-	m_PerfectScore{ 1.f },
-	m_Best{ "" }
+	m_Target{ target },
+	m_Count{ count },
+	m_Obstacle{obstacle}
 {
-	m_Population.resize(populationSize);
-	for (int i{}; i < populationSize; ++i)
+	for (int i{}; i < m_PopulationSize; ++i)
 	{
-		m_Population[i] = new DNA(static_cast<int>(m_Target.size()));
-	}
-	CalcFitness();
-}
-
-Population::~Population()
-{
-	for(int i{}; i < m_Population.size(); ++i)
-	{
-		delete m_Population[i];
+		m_Rockets.push_back(std::make_unique<Rocket>(lifespan, mutationRate, count));
 	}
 }
 
-void Population::CalcFitness()
+float Population::NaturalSelection()
 {
-	for (int i{}; i < m_Population.size(); ++i)
+	float maxFitness{};
+	for (std::shared_ptr<Rocket> rocket : m_Rockets)
 	{
-		m_Population[i]->CalcFitness(m_Target);
-	}
-}
-
-void Population::NaturalSelection()
-{
-
-
-}
-
-void Population::Generate()
-{
-	float maxFitness{ 0 };
-
-	for (int i{ 0 }; i < m_Population.size(); ++i)
-	{
-		if (m_Population[i]->GetFitness() > maxFitness)
-			maxFitness = m_Population[i]->GetFitness();
-	}
-
-
-	std::vector<DNA*> newPopulation{};
-	newPopulation.resize(m_Population.size());
-	for (int i{ 0 }; i < m_Population.size(); ++i)
-	{
-		auto partnerA{ AcceptReject(maxFitness) };
-		auto partnerB{ AcceptReject(maxFitness) };
-		DNA* child{ partnerA->Crossover(partnerB) };
-		child->Mutate(m_MutationRate);
-		newPopulation[i] = child;
-
-	}
-
-	for(int i{}; i < m_Population.size(); ++i)
-	{
-		delete m_Population[i];
-	}
-
-	m_Population = newPopulation;
-	++m_Generations;
-
-}
-
-DNA* Population::AcceptReject(const float maxFitness)
-{
-	int beSafe{ 0 };
-	while (true)
-	{
-		int index{ utils::RandomInteger(0,int(m_Population.size()) - 1) };
-		DNA* partner{ m_Population[index] };
-		float r{ utils::RandomFloat(0,maxFitness) };
-		if (r < partner->GetFitness())
+		rocket->CalcFitness(m_Target);
+		if (rocket->m_Fitness > maxFitness)
 		{
-			return partner;
+			maxFitness = rocket->m_Fitness;
 		}
-		++beSafe;
-
-		if (beSafe > 10000)
-			return nullptr;
 	}
 
-	return nullptr;
-}
-
-std::string Population::GetBest()
-{
-	return m_Best;
-}
-
-void Population::Evaluate()
-{
-	float worldRecord{ 0.0f };
-	int index{ 0 };
-
-	for (int i{ 0 }; i < m_Population.size(); ++i)
+	for (std::shared_ptr<Rocket> rocket : m_Rockets)
 	{
-		if (m_Population[i]->GetFitness() > worldRecord)
+		rocket->m_Fitness /= maxFitness;
+	}
+	m_MatingPool.clear();
+	for (std::shared_ptr<Rocket> rocket : m_Rockets)
+	{
+		int n{ int(rocket->m_Fitness * 100) };
+		for (int i{}; i < n; ++i)
 		{
-			index = i;
-			worldRecord = m_Population[i]->GetFitness();
+			m_MatingPool.push_back(rocket);
 		}
+	}
+	return maxFitness;
+}
 
+int Population::GetFinished()
+{
+	int count = 0;
+	for (const auto& rocket : m_Rockets) {
+		if (rocket->m_Finished)
+			count++;
+	}
+	return count;
+}
+
+void Population::Selection()
+{
+	std::vector<std::shared_ptr<Rocket>> newRockets;
+	for (int i = 0; i < m_Rockets.size(); i++) {
+		int randomIndex = int(RandomNumber(int(m_MatingPool.size() )- 1));
+		DNA parentA = m_MatingPool[randomIndex]->m_Dna;
+		randomIndex = int(RandomNumber(int(m_MatingPool.size() )- 1));
+		DNA parentB = m_MatingPool[randomIndex]->m_Dna;
+		DNA child = parentA.Crossover(parentB);
+
+		child.Mutate();
+
+		newRockets.push_back(std::make_unique<Rocket>(child, m_Count));
 	}
 
-	m_Best = m_Population[index]->GetPhrase();
-	if (worldRecord >= m_PerfectScore)
+	m_Rockets = newRockets;
+}
+
+void Population::Update(float elapsedSec)
+{
+	for (std::shared_ptr<Rocket> rocket : m_Rockets) 
 	{
-		m_Finished = true;
+		rocket->Update(m_Target,m_Obstacle,elapsedSec);
 	}
 }
 
-bool Population::IsFinished() const
+void Population::Draw()
 {
-	return m_Finished;
-}
-
-int Population::GetGenerations() const
-{
-	return m_Generations;
-}
-
-float Population::GetAverageFitness() const
-{
-	float total{ 0 };
-	for (int i{ 0 }; i < m_Population.size(); ++i)
+	for (std::shared_ptr<Rocket> rocket : m_Rockets) 
 	{
-		total += m_Population[i]->GetFitness();
+		rocket->Draw();
 	}
-	return total / static_cast<float>(m_Population.size());
-}
-
-std::string Population::AllPhrases() const
-{
-	std::string everything{ "" };
-	int displayLimit{ std::min(static_cast<int>(m_Population.size()),50) };
-
-	for (int i{}; i < displayLimit; ++i)
-	{
-		everything += m_Population[i]->GetPhrase() + "\n";
-	}
-	return everything;
 }

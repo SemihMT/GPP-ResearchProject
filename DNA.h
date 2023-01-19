@@ -1,25 +1,19 @@
-#pragma once
-
-class DNA final
+﻿#pragma once
+#include "pch.h"
+#include <vector>
+#include "utils.h"
+#include "UtilityFunctions.h"
+using namespace utils;
+struct DNA
 {
-public:
-	explicit DNA(const int num);
-	~DNA();
-
-	// Returns m_Genes
-	std::string GetPhrase() const;
-
-	// Fitness Function (returns floating point % of "correct" characters)
-	void CalcFitness(const std::string& target);
-
-	// Crossover
-	DNA* Crossover(const DNA* partner);
-
-	// Picks a new random character based on a mutation probability
-	void Mutate(const float mutationRate);
-
-	float GetFitness() const;
-private:
-	std::string m_Genes; // array of characters
-	float m_Fitness; // fitness score
+	DNA();
+	DNA(int lifespan, float mutationRate);
+	DNA(std::vector<Vector2f>& genes, float mutationRate);
+	
+	DNA Crossover(DNA partner);
+	void Mutate();
+	
+	std::vector<Vector2f> m_Genes;
+	float m_Magnitude{0.2f};
+	float m_MutationRate;
 };

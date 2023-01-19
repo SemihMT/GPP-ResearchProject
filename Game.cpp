@@ -1,89 +1,82 @@
 #include "pch.h"
 #include "Game.h"
+
 #include <iostream>
-#include <algorithm>
-#include <string>
-#include <vector>
-#include "Population.h"
 
 
-Game::Game(const Window& window)
-	:m_Window{ window }
-
+Game::Game( const Window& window ) 
+	:m_Window{ window },
+	m_Generations{},
+	m_Frames{},
+	m_PopulationSize{},
+	m_Lifespan{},
+	m_MutationRate{},
+	m_Target{600,350}
 {
-	Initialize();
+	Initialize( );
 }
 
-Game::~Game()
+Game::~Game( )
 {
-	Cleanup();
+	Cleanup( );
 }
 
-void Game::Initialize()
+void Game::Initialize( )
 {
-	// Create a population with a target phrase, mutation rate, and population max
-	setup();
-	m_pText = new Texture("Test", "Resources/DOTMATRI.TTF", 25, Color4f{ 1,1,1,1 });
-	//m_upText = std::make_unique<Texture>("Unique ptr Text", "Resources/DOTMATRI.TTF", 25, Color4f{ 1,1,1,1 });
-	m_RocketLifeSpan = 100;
-	
-	m_Rocket = std::make_unique<Rocket>(Vector2f{m_Window.width/2.f, 0}, m_Target);
-	m_RocketPop = std::make_unique<RocketPopulation>(m_RocketLifeSpan, m_Target);
+
+	m_PopulationSize = 600;
+	m_Lifespan = 400;
+	m_MutationRate = 0.05f;
+	m_Population = new Population{m_PopulationSize, m_Lifespan, m_MutationRate, m_Target, Rectf{200,250,500,20},m_Frames};
 }
 
-void Game::Cleanup()
+void Game::Cleanup( )
 {
-	delete m_pText;
-	
+	delete m_Population;
 }
 
-void Game::Update(float elapsedSec)
+void Game::Update( float elapsedSec )
 {
-	++m_Counter;
-	m_Counter %= 100;
-	if (!m_Population->IsFinished())
+	m_Population->Update(elapsedSec);
+	++m_Frames;
+	if(m_Frames == m_Lifespan)
 	{
-		m_Population->NaturalSelection();
-		m_Population->Generate();
-		m_Population->CalcFitness();
-		std::string answer{ m_Population->GetBest() };
-
-		std::cout << answer << "\n";
-		m_Population->Evaluate();
+		m_MaxFitness = m_Population->NaturalSelection();
+		std::cout << "Generation: " << m_Generations<<"\n";
+		std::cout << (float(m_Population->GetFinished()) / float(m_PopulationSize)) * 100.0f << " % Completed\n";
+		std::cout << "Max Fitness: "<< m_MaxFitness << "\n";
+		m_Population->Selection();
+		m_Frames = 0;
+		++m_Generations;
 	}
-
-	m_upToBe = std::make_unique<Texture>(m_Population->GetBest(),"Resources/DOTMATRI.TTF", 40, Color4f{ 1,1,1,1 });
-	m_upGenerations = std::make_unique<Texture>("Generations: " + std::to_string(m_Population->GetGenerations()),"Resources/DOTMATRI.TTF", 25, Color4f{ 1,1,1,1 });
-	m_upMutationRate = std::make_unique<Texture>("Average Fitness: " + std::to_string(m_Population->GetAverageFitness()),"Resources/DOTMATRI.TTF", 25, Color4f{ 1,1,1,1 });
-	m_upPopSize = std::make_unique<Texture>("Max Population: " + std::to_string(m_PopMax),"Resources/DOTMATRI.TTF", 25, Color4f{ 1,1,1,1 });
-
-
-	m_RocketPop->Update();
-	m_RocketPop->Evaluate();
-	m_RocketPop->Selection();
-	m_Rocket->Update(m_Counter);
-
 	
+
+	// Check keyboard state
+	//const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
+	//if ( pStates[SDL_SCANCODE_RIGHT] )
+	//{
+	//	std::cout << "Right arrow key is down\n";
+	//}
+	//if ( pStates[SDL_SCANCODE_LEFT] && pStates[SDL_SCANCODE_UP])
+	//{
+	//	std::cout << "Left and up arrow keys are down\n";
+	//}
 }
 
-void Game::Draw() const
+void Game::Draw( ) const
 {
-	ClearBackground();
-	m_upToBe->Draw( Point2f{(m_Window.width / 2) - m_upToBe->GetWidth()/2,m_Window.height/2 - m_upToBe->GetHeight()/2});
-	m_upGenerations->Draw(Point2f{(m_Window.width / 2) - m_upToBe->GetWidth()/2,m_Window.height/2 - m_upToBe->GetHeight()/2 - m_upGenerations->GetHeight() - 20});
-	m_upMutationRate->Draw(Point2f{(m_Window.width / 2) - m_upToBe->GetWidth()/2,m_Window.height/2 - m_upToBe->GetHeight()/2 + m_upMutationRate->GetHeight()+25});
-	m_upPopSize->Draw(Point2f{(m_Window.width / 2) - m_upToBe->GetWidth()/2,m_Window.height/2 - m_upToBe->GetHeight()/2 - m_upGenerations->GetHeight() - m_upPopSize->GetHeight() - 20});
-
-	m_RocketPop->Draw();
-	m_Rocket->Draw();
+	ClearBackground( );
+	DrawEllipse(m_Target.ToPoint2f(),5,5);
+	DrawRect(Rectf{200,250,500,20});
+	m_Population->Draw();
 }
 
-void Game::ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
+void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
 {
 	//std::cout << "KEYDOWN event: " << e.keysym.sym << std::endl;
 }
 
-void Game::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
+void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 {
 	//std::cout << "KEYUP event: " << e.keysym.sym << std::endl;
 	//switch ( e.keysym.sym )
@@ -101,12 +94,12 @@ void Game::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
 	//}
 }
 
-void Game::ProcessMouseMotionEvent(const SDL_MouseMotionEvent& e)
+void Game::ProcessMouseMotionEvent( const SDL_MouseMotionEvent& e )
 {
-	m_Target = Point2f{float(e.x),float(e.y)};
+	//m_Target = Vector2f{float(e.x),float(e.y)};
 }
 
-void Game::ProcessMouseDownEvent(const SDL_MouseButtonEvent& e)
+void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 {
 	//std::cout << "MOUSEBUTTONDOWN event: ";
 	//switch ( e.button )
@@ -123,7 +116,7 @@ void Game::ProcessMouseDownEvent(const SDL_MouseButtonEvent& e)
 	//}
 }
 
-void Game::ProcessMouseUpEvent(const SDL_MouseButtonEvent& e)
+void Game::ProcessMouseUpEvent( const SDL_MouseButtonEvent& e )
 {
 	//std::cout << "MOUSEBUTTONUP event: ";
 	//switch ( e.button )
@@ -140,21 +133,8 @@ void Game::ProcessMouseUpEvent(const SDL_MouseButtonEvent& e)
 	//}
 }
 
-void Game::ClearBackground() const
+void Game::ClearBackground( ) const
 {
-	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor( 0.0f, 0.0f, 0.3f, 1.0f );
+	glClear( GL_COLOR_BUFFER_BIT );
 }
-void Game::setup()
-{
-	m_TargetPhrase = "To be or not to be";
-	m_PopMax = 400;
-	m_MutationRate = 0.03f;
-	m_Population = std::make_unique<Population>( m_TargetPhrase,m_MutationRate,m_PopMax );
-}
-
-void Game::displayInfo()
-{
-}
-
-

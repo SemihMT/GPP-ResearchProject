@@ -1,28 +1,31 @@
 ﻿#pragma once
-#include "utils.h"
-#include "RocketDNA.h"
-using namespace utils;
-class Rocket
+#include "DNA.h"
+struct Rocket
 {
-public:
-	Rocket(const Vector2f& startingPos, const Point2f& targetPoint);
-	Rocket(const Vector2f& startingPos, const Point2f& targetPoint, std::vector<Vector2f> dna);
-	void ApplyForce(const Vector2f& force);
-	void Update(const int count);
+	Rocket(int lifespan, float mutationRate, int& count);
+	Rocket(const DNA& dna, int& count);
+
+	void ApplyForce(const Vector2f& f);
+	void Update(const Vector2f& target, const Rectf& obstacle,float elapsedSec);
+	void CalcFitness(const Vector2f& target);
 	void Draw() const;
-	void CalcFitness();
-	float GetFitness(){return m_Fitness;}
-	void SetFitness(float fitness){m_Fitness = fitness;}
-	RocketDNA GetDNA(){return m_Dna;}
-private:
-	Vector2f m_Position{};
-	Vector2f m_Velocity{};
-	Vector2f m_Acceleration{};
-	RocketDNA m_Dna;
-	Point2f m_Target{};
-	float m_Fitness{};
-	
 
 	
+
+	Rectf m_Shape;
+	Vector2f m_Pos;
+	Vector2f m_Vel;
+	Vector2f m_Acc;
+
+	int& m_Count;
+	int m_CompletionTime;
+	int m_Lifespan;
+
+	float m_Fitness;
+	bool m_Finished;
+	bool m_Crashed;
+
+	DNA m_Dna;
+
 
 };

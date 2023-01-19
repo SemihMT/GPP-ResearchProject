@@ -1,76 +1,47 @@
-#include "pch.h"
-#include "DNA.h"
-
-#include "utils.h"
-
-//The object that stores the genotype of our "organism"
-//The DNA object for the shakespeare project is also an array of n characters, representing the fenotype
-//The closer this DNA object gets to the target phrase, or target in general, the better the fenotype is
-//this "closeness" is numerically represented by the fitness function
-
-
-DNA::DNA(const int num) :
+﻿#include "DNA.h"
+DNA::DNA(int lifespan, float mutationRate):
 	m_Genes{},
-	m_Fitness{}
-{
-	m_Genes.resize(num);
-	for (size_t i = 0; i < num; i++)
-	{
-		m_Genes[i] = utils::RandomCharacter();
-	}
-}
-
-DNA::~DNA()
-{
+	m_Magnitude{.2f},
+	m_MutationRate{mutationRate}
 	
-}
-
-std::string DNA::GetPhrase() const
 {
-	return m_Genes;
-}
-
-void DNA::CalcFitness(const std::string& target)
-{
-	int score{ 0 };
-	for (size_t i = 0; i < m_Genes.size(); i++)
+	for(int i{}; i < lifespan; ++i)
 	{
-		if (m_Genes[i] == target[i])
+		m_Genes.push_back(RandomVector(m_Magnitude));
+	}
+}
+
+DNA::DNA(std::vector<Vector2f>& genes, float mutationRate):
+	m_Genes{genes},
+	m_Magnitude{.2f},
+	m_MutationRate{mutationRate}
+{
+}
+
+DNA DNA::Crossover(DNA partner)
+{
+	std::vector<Vector2f> newGenes;
+	for(int i{}; i < m_Genes.size(); ++i)
+	{
+		int midPoint{int(RandomNumber(float(m_Genes.size())))};
+		if(i > midPoint)
 		{
-			++score;
+			newGenes.push_back(m_Genes[i]);
+		}else
+		{
+			newGenes.push_back(partner.m_Genes[i]);
 		}
 	}
-
-	m_Fitness = score / static_cast<float>(target.size());
-	m_Fitness = powf(m_Fitness,2) + 0.01f;
+	return DNA(newGenes,m_MutationRate);
 }
 
-DNA* DNA::Crossover(const DNA* partner)
+void DNA::Mutate()
 {
-	DNA* child{new DNA{static_cast<int>(m_Genes.size())}};
-	const int midpoint{utils::RandomInteger(0,static_cast<int>(m_Genes.size()))};
-	for (size_t i = 0; i < m_Genes.size(); i++)
+	for(int i{}; i < m_Genes.size(); ++i)
 	{
-		if(i > midpoint)
-			child->m_Genes[i] = m_Genes[i];
-		else
-			child->m_Genes[i] = partner->m_Genes[i];
-	}
-	return child;
-}
-
-void DNA::Mutate(const float mutationRate)
-{
-	for (size_t i = 0; i < m_Genes.size(); i++)
-	{
-		if(utils::RandomFloat() < mutationRate)
+		if(RandomNumber(0.0f,1.0f) < m_MutationRate)
 		{
-			m_Genes[i] = utils::RandomCharacter();
+			m_Genes[i] = RandomVector(m_Magnitude);
 		}
 	}
-}
-
-float DNA::GetFitness() const
-{
-	return m_Fitness;
 }

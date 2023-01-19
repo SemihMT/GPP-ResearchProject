@@ -1,51 +1,97 @@
-﻿#include "pch.h"
-#include "Rocket.h"
+﻿#include "Rocket.h"
+Rocket::Rocket(int lifespan, float mutationRate, int& count) :
+	m_Shape{423,0,50,10},
+	m_Pos{423,0},
+	m_Vel{},
+	m_Acc{},
+	m_Count{count},
+	m_Lifespan{lifespan},
+	m_Fitness{},
+	m_Finished{},
+	m_Crashed{},
+	m_Dna{DNA{lifespan,mutationRate}}
+{
+}
 
-Rocket::Rocket(const Vector2f& startingPos, const Point2f& targetPoint) :
-	m_Position{ startingPos },
-	m_Velocity{ 0,0 },
-	m_Acceleration{},
-	m_Dna{},
-	m_Target{targetPoint}
+Rocket::Rocket(const DNA& dna, int& count) :
+	Rocket(m_Lifespan,dna.m_MutationRate, count)
 	
 {
+	m_Dna = dna;
 }
 
-Rocket::Rocket(const Vector2f& startingPos, const Point2f& targetPoint, std::vector<Vector2f> dna):
-	m_Position{ startingPos },
-	m_Velocity{ 0,0 },
-	m_Acceleration{},
-	m_Dna{dna},
-	m_Target{targetPoint}
+void Rocket::ApplyForce(const Vector2f& f)
 {
+	m_Acc += f;
 }
 
-void Rocket::ApplyForce(const Vector2f& force)
+void Rocket::Update(const Vector2f& target,const Rectf& obstacle, float elapsedSec)
 {
-	m_Acceleration += force;
+	float distance{GetDistance(m_Pos.ToPoint2f(),target.ToPoint2f())};
+	if(m_Finished == false && distance < 10.f)
+	{
+		m_Finished = true;
+		m_CompletionTime = m_Count;
+		m_Pos = target;
+	}
+
+	if(m_Pos.x > obstacle.left && m_Pos.x < obstacle.left + obstacle.width && m_Pos.y > obstacle.bottom && m_Pos.y < obstacle.bottom + obstacle.height)
+	{
+		m_Crashed = true;
+	}
+
+
+	if(m_Pos.x > 846 ||m_Pos.x < 0)
+	{
+		m_Crashed = true;
+	}
+	if(m_Pos.y > 500 ||m_Pos.y < 0)
+	{
+		m_Crashed = true;
+	}
+	if(m_Count < m_Dna.m_Genes.size())
+	{
+		ApplyForce(m_Dna.m_Genes[m_Count]);
+	}
+	if(!m_Finished && !m_Crashed)
+	{
+		m_Vel += m_Acc;
+		m_Pos += m_Vel;
+		m_Acc = Vector2f{0,0};
+	}
+
 }
 
-void Rocket::Update(const int count)
+void Rocket::CalcFitness(const Vector2f& target)
 {
-	ApplyForce(m_Dna.GetGenes()[count]);
+		float distance{GetDistance(m_Pos.ToPoint2f(),target.ToPoint2f())};
+
+
+		// remaps the range
+		m_Fitness = 1.f / (distance + 0.0000001f) ;
+			//float(Range(distance, 0, 846, 846, 0));
 	
-	m_Velocity += m_Acceleration;
-	m_Position += m_Velocity;
-	m_Acceleration = Vector2f{ 0,0 };
+		if (m_Finished) {
+			m_Fitness *= powf((float)m_Dna.m_Genes.size() / (float)m_CompletionTime, 2) * 10; // completion time multiplier exponential
+			
+		}
+
+		if (m_Crashed) {
+			m_Fitness = 0;
+		}
+
+		m_Fitness = powf(m_Fitness, 2); // fitness becomes exponential
 }
 
 void Rocket::Draw() const
 {
 	glPushMatrix();
-	glTranslatef(m_Position.x, m_Position.y, 0);
-	glRotatef(m_Velocity.AngleWith(Vector2f{ 1,0 }), 0, 0, 1);
+	//glTranslatef(-m_Pos.x,-m_Pos.y,0);
+	glTranslatef(m_Pos.x, m_Pos.y, 0);
+	float angle{atan2(m_Vel.Normalized().y,m_Vel.Normalized().x)};
+	glRotatef((angle / utils::g_Pi) * 180.f, 0, 0, 1);
+	
 
-	FillRect(0, 0, 10, 50);
+	FillRect(0, 0, 50, 10);
 	glPopMatrix();
-}
-
-void Rocket::CalcFitness()
-{
-	float d = GetDistance(m_Position.x,m_Position.y,m_Target.x,m_Target.y);
-	m_Fitness = 1.f/d;
 }
