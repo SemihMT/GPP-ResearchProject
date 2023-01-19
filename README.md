@@ -65,3 +65,21 @@ I represented the **Genotype** of my rockets as a container of 2D vectors, with 
 The 2D vectors are impulses added to the velocity of the rocket, guiding it towards the target (hopefully).
 
 The **Phenotype** is arguably less important in the eyes of the algorithm, only acting as feedback for the user. In my case the fenotype of the rockets are rectangles, rotating in the direction their **Genotype** guides them.
+
+## Conclusion
+My implementation works as intended. There is a gradual shift in fitness and on average the number of rockets that reach the goal increases. 
+I have not tested the program by running it longer than 10 minutes though. Doing so could uncover bugs or errors in the algorithm implementation.
+
+Also, playing with the factors such as:
+- the lifespan
+- the population size
+- the mutation rate
+- ... 
+could show improvements in the number of rockets reaching the goal per generation as well
+
+
+## Future Improvements
+
+When starting the research project I had hoped to make an implementation of the genetic algorithm, not on rockets or vectors but on small neural networks that would allow basic input and output in order to play a simple game. And had I had more time, that is what I certainly would have done. But that will probably be a summer project for now. 
+
+Recreating this program by making a topologically evolving neural network to control the rockets is the next big goal.
