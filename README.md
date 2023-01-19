@@ -75,6 +75,7 @@ Also, playing with the factors such as:
 - the population size
 - the mutation rate
 - ... 
+
 could show improvements in the number of rockets reaching the goal per generation as well
 
 
